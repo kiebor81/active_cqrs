@@ -2,7 +2,7 @@
 
 [![Gem Version](https://badge.fury.io/rb/active_cqrs.svg)](https://badge.fury.io/rb/active_cqrs)
 
-`active_cqrs` is a lightweight Ruby gem that introduces **CQRS (Command Query Responsibility Segregation)** into your Rails applications. To keep with familiarity and common Rails conventions, Active CQRS builds directly ontop of ActiveRecord. It intends to enforce a clean separation between commands (write operations) and queries (read operations), enabling better scalability and maintainability.
+`active_cqrs` is a lightweight Ruby gem that introduces **CQRS (Command Query Responsibility Segregation)** into your Rails applications. To keep with familiarity and common Rails conventions, Active CQRS builds directly on top of ActiveRecord. It intends to enforce a clean separation between commands (write operations) and queries (read operations), enabling better scalability and maintainability.
 
 ---
 
@@ -214,7 +214,7 @@ rails generate cqrs:query GetUser
 
 ---
 
-### Using Actve CQRS
+### Using Active CQRS
 
 The Command and Query buses are defined globally. This means you can seamlessly integrate Active CQRS into your architecture.
 
@@ -357,6 +357,105 @@ def call(query)
 end
 
 ```
+
+**Split Concerns Across Databases**
+
+For advanced configurations, you can fully separate read and write responsibilities by connecting your Rails application to two distinct databases. These can be kept in sync using replication or background job–based synchronization.
+
+```yml
+default: &default
+  adapter: postgresql
+  encoding: unicode
+
+development:
+  primary:
+    <<: *default
+    database: write_db
+
+  reporting:
+    <<: *default
+    database: read_db
+```
+
+Define base classes distinctly for each database
+
+```ruby
+# app/models/write_record.rb
+class WriteRecord < ActiveRecord::Base
+  self.abstract_class = true
+  connects_to database: { writing: :primary }
+end
+
+# app/models/read_record.rb
+class ReadRecord < ActiveRecord::Base
+  self.abstract_class = true
+  connects_to database: { reading: :reporting }
+end
+```
+
+Define models per DB to enforce separation
+
+```ruby
+# Write model
+class User < WriteRecord
+  # Used in command handlers
+end
+
+# Read model
+class UserView < ReadRecord
+  self.table_name = "users"
+  def readonly?
+    true
+  end
+end
+```
+
+If you’re not using native database replication, you can define a background job to synchronize write-side changes to the read database
+
+```ruby
+class SyncUserToReadDbJob < ApplicationJob
+  queue_as :default
+
+  def perform(user_id)
+    user = User.find(user_id)
+    return unless user
+
+    UserView.upsert({ id: user.id, name: user.name, email: user.email })
+  end
+end
+```
+
+Execute job after successful execution in the command handler
+
+```ruby
+class CreateUserHandler
+  def call(command)
+    user = User.create!(command.attributes)
+
+    # Trigger sync job to propagate to read DB
+    SyncUserToReadDbJob.perform(user.id)
+
+    user
+  end
+end
+```
+
+Alternatively, you can move the job trigger into an `after_commit` callback on the User model for implicit syncing behaviour.
+
+```ruby
+class User < WriteRecord
+  after_commit :sync_to_read_model, on: [:create, :update]
+
+  private
+
+  def sync_to_read_model
+    SyncUserToReadDbJob.perform(id)
+  end
+end
+
+```
+
+---
 
 ### Active CQRS with DDD (_Rails-Domino_)
 
