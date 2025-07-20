@@ -424,7 +424,7 @@ Register it in Domino
 Domino::Container.register("user_query_service", -> { UserQueryService.new })
 ```
 
-Reuse the srvice in query handlers
+Re-use the service in query handlers
 
 ```ruby
 # app/handlers/queries/get_user_by_email_handler.rb
@@ -441,7 +441,7 @@ class GetUserByEmailHandler
 end
 ```
 
-In this setup, Domino's controller become defunct, but we can modify them to use our CQRS buses and maintain the DDD pattern.
+In this setup, Domino's generated controllers become defunct, but we can modify them to use our CQRS buses and maintain the DDD pattern.
 
 ```ruby
 class UsersController < ApplicationController
