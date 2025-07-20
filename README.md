@@ -356,6 +356,139 @@ end
 
 ```
 
+### Active CQRS with DDD (_Rails-Domino_)
+
+Active CQRS is compatible with [Rails-Domino](https://github.com/kiebor81/rails-domino).
+
+```bash
+rails generate domino user name:string email:string --with-model
+```
+
+```bash
+rails generate cqrs:command CreateUser
+```
+
+The `user_service` can be injected into and used from inside the command handler.
+
+```ruby
+# app/handlers/commands/create_user_handler.rb
+class CreateUserHandler
+  def call(command)
+    user_service.create(command.attributes)
+  end
+
+  private
+
+  def user_service
+    Domino::Container["user_service"]
+  end
+end
+```
+
+Similarly, we can access the `user_repository` from any query handler
+
+```ruby
+# app/handlers/queries/get_user_handler.rb
+class GetUserHandler
+  def call(query)
+    user_repository.get(query.criteria[:id])
+  end
+
+  private
+
+  def user_repository
+    Domino::Container["user_repository"]
+  end
+end
+```
+
+Alternatively create a dedicated service for querying
+
+```ruby
+# app/services/user_query_service.rb
+class UserQueryService
+  include Domino::Import["user_repository"]
+
+  def find_by_email(email)
+    user_repository.find_by(email: email)
+  end
+end
+```
+
+Register it in Domino
+
+```ruby
+# config/initializers/domino_container.rb
+Domino::Container.register("user_query_service", -> { UserQueryService.new })
+```
+
+Reuse the srvice in query handlers
+
+```ruby
+# app/handlers/queries/get_user_by_email_handler.rb
+class GetUserByEmailHandler
+  def call(query)
+    user_query_service.find_by_email(query.criteria[:email])
+  end
+
+  private
+
+  def user_query_service
+    Domino::Container["user_query_service"]
+  end
+end
+```
+
+In this setup, Domino's controller become defunct, but we can modify them to use our CQRS buses and maintain the DDD pattern.
+
+```ruby
+class UsersController < ApplicationController
+
+  def index
+    query = GetAllUsersQuery.new
+    users = CQRS_QUERY_BUS.call(query)
+    render json: UserBlueprint.render(users)
+  end
+
+  def show
+    query = GetUserQuery.new(id: params[:id])
+    user = CQRS_QUERY_BUS.call(query)
+
+    if user
+      render json: UserBlueprint.render(user)
+    else
+      head :not_found
+    end
+  end
+
+  def create
+    command = CreateUserCommand.new(resource_params)
+    user = CQRS_COMMAND_BUS.call(command)
+    render json: UserBlueprint.render(user), status: :created
+  rescue ActiveRecord::RecordInvalid => e
+    render json: { errors: e.record.errors.full_messages }, status: :unprocessable_entity
+  end
+
+  def update
+    command = UpdateUserCommand.new(id: params[:id], **resource_params.to_h)
+    user = CQRS_COMMAND_BUS.call(command)
+    render json: UserBlueprint.render(user)
+  end
+
+  def destroy
+    command = DeleteUserCommand.new(id: params[:id])
+    CQRS_COMMAND_BUS.call(command)
+    head :no_content
+  end
+
+  private
+
+  def resource_params
+    params.require(:user).permit(:name, :email)
+  end
+end
+```
+
 ---
 
 ## License
