@@ -418,7 +418,16 @@ development:
     database: read_db
 ```
 
-Define base classes distinctly for each database
+You can create a single base class configured to perform commands and queries separately, and use Active CQRS without any further configuration.
+
+```ruby
+class CqrsRecord < ActiveRecord::Base
+  self.abstract_class = true
+  connects_to database: { writing: :primary, reading: :reporting }
+end
+```
+
+Alternatively, define base classes distinctly for each database
 
 ```ruby
 # app/models/write_record.rb
