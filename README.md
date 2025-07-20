@@ -179,6 +179,8 @@ You’ll see logs like:
 
 ## Usage
 
+Using Active CQRS' generators will create the command/query stub and handlers. Based on your [data strategy](#practical-implementation-advice), youl will need to finalsie the command and query classes with your execution logic.
+
 ### Generate a Command
 
 ```sh
@@ -201,7 +203,18 @@ end
 # app/handlers/commands/create_user_handler.rb
 class CreateUserHandler
   def call(command)
-    User.create!(command.attributes)
+    # Implement your command logic here
+    #
+    # Access command attributes via: command.attributes[:key]
+    # 
+    # Example where `Record` is your Active Record model:
+    # record = Record.new(command.attributes)
+    # if record.save
+    #   return record
+    # else
+    #   raise ActiveRecord::RecordInvalid, record
+    # end
+    raise NotImplementedError, "Define #{self.class.name}#call"
   end
 end
 ```
@@ -210,6 +223,34 @@ end
 
 ```sh
 rails generate cqrs:query GetUser
+```
+
+This creates:
+
+```ruby
+# app/queries/get_user_query.rb
+class GetUserQuery
+  attr_reader :criteria
+
+  def initialize(criteria = {})
+    @criteria = criteria
+  end
+end
+```
+
+```ruby
+# app/handlers/queries/get_user_handler.rb
+class GetUserHandler
+  def call(query)
+    # Implement your query logic here
+    #
+    # Access query criteria via: query.criteria[:key]
+    #
+    # Example where `Record` is your Active Record model:
+    # Record.find_by(id: query.criteria[:id])
+    raise NotImplementedError, "Define #{self.class.name}#call"
+  end
+end
 ```
 
 ---
