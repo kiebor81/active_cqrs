@@ -361,3 +361,7 @@ end
 ## License
 
 MIT
+
+## Contributing
+
+Pull requests welcome!
