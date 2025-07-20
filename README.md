@@ -179,7 +179,7 @@ You’ll see logs like:
 
 ## Usage
 
-Using Active CQRS' generators will create the command/query stub and handlers. Based on your [data strategy](#practical-implementation-advice), youl will need to finalsie the command and query classes with your execution logic.
+Using Active CQRS' generators will create the command/query stub and handlers. Based on your [data strategy](#practical-implementation-advice), you will need to finalise the command and query classes with your execution logic.
 
 ### Generate a Command
 
