@@ -1,0 +1,14 @@
+# frozen_string_literal: true
+
+class <%= class_name %>Handler
+  def call(query)
+    # Implement your query logic here
+    #
+    # Access query criteria via: query.criteria[:key]
+    #
+    # Example where `Record` is your Active Record model:
+    # Record.find_by(id: query.criteria[:id])
+
+    raise NotImplementedError, "Define #{self.class.name}#call"
+  end
+end

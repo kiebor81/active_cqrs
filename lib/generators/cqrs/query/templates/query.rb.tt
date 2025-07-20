@@ -1,0 +1,9 @@
+# frozen_string_literal: true
+
+class <%= class_name %>Query
+  attr_reader :criteria
+
+  def initialize(criteria = {})
+    @criteria = criteria
+  end
+end

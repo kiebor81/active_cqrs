@@ -1,0 +1,19 @@
+# frozen_string_literal: true
+
+class <%= class_name %>Handler
+  def call(command)
+    # Implement your command logic here
+    #
+    # Access command attributes via: command.attributes[:key]
+    # 
+    # Example where `Record` is your Active Record model:
+    # record = Record.new(command.attributes)
+    # if record.save
+    #   return record
+    # else
+    #   raise ActiveRecord::RecordInvalid, record
+    # end
+
+    raise NotImplementedError, "Define #{self.class.name}#call"
+  end
+end

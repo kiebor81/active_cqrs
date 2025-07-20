@@ -1,0 +1,25 @@
+/.bundle/
+/.yardoc
+/_yardoc/
+/coverage/
+/doc/
+/pkg/
+/spec/reports/
+/tmp/
+
+/bin/
+/bin/*
+/example/
+# rspec failure tracking
+.rspec_status
+
+*.gem
+*.log
+*.swp
+*.swo
+.bundle
+pkg
+log
+tmp
+coverage
+.DS_Store
