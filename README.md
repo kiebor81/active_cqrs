@@ -645,7 +645,7 @@ end
 
 ## License
 
-MIT
+MIT License © kiebor81
 
 ## Contributing
 
