@@ -1,6 +1,7 @@
 # Active CQRS
 
 [![Gem Version](https://badge.fury.io/rb/active_cqrs.svg)](https://badge.fury.io/rb/active_cqrs)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 `active_cqrs` is a lightweight Ruby gem that introduces **CQRS (Command Query Responsibility Segregation)** into your Rails applications. To keep with familiarity and common Rails conventions, Active CQRS builds directly on top of ActiveRecord. It intends to enforce a clean separation between commands (write operations) and queries (read operations), enabling better scalability and maintainability.
 
